@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國小升私中數學練習網</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh; padding: 20px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    text-align: center; color: #fff; padding: 30px 0;
+  }
+  .header h1 { font-size: 2.5em; text-shadow: 2px 2px 8px rgba(0,0,0,0.3); }
+  .header p { font-size: 1.2em; margin-top: 10px; opacity: 0.9; }
+
+  /* Stats Bar */
+  .stats-bar {
+    display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;
+    background: #fff; border-radius: 15px; padding: 20px; margin: 20px 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .stat-card {
+    text-align: center; padding: 10px 25px;
+    border-radius: 10px; min-width: 120px;
+  }
+  .stat-card h3 { font-size: 0.9em; color: #888; margin-bottom: 5px; }
+  .stat-card .num { font-size: 2em; font-weight: bold; }
+  .stat-card.score .num { color: #4CAF50; }
+  .stat-card.correct .num { color: #2196F3; }
+  .stat-card.wrong .num { color: #f44336; }
+  .stat-card.progress .num { color: #FF9800; }
+
+  /* Topic Selector */
+  .topic-selector {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 20px 0;
+  }
+  .topic-btn {
+    padding: 12px 24px; border: none; border-radius: 25px;
+    font-size: 1em; cursor: pointer; transition: all 0.3s;
+    background: #fff; color: #333; font-weight: 600;
+  }
+  .topic-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+  .topic-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+  }
+
+  /* Difficulty Selector */
+  .difficulty-selector {
+    display: flex; gap: 10px; justify-content: center; margin: 15px 0;
+  }
+  .diff-btn {
+    padding: 8px 20px; border: 2px solid; border-radius: 20px;
+    background: #fff; cursor: pointer; font-weight: 600; transition: all 0.3s;
+  }
+  .diff-btn[data-diff="easy"] { border-color: #4CAF50; color: #4CAF50; }
+  .diff-btn[data-diff="medium"] { border-color: #FF9800; color: #FF9800; }
+  .diff-btn[data-diff="hard"] { border-color: #f44336; color: #f44336; }
+  .diff-btn.active { color: #fff; }
+  .diff-btn[data-diff="easy"].active { background: #4CAF50; }
+  .diff-btn[data-diff="medium"].active { background: #FF9800; }
+  .diff-btn[data-diff="hard"].active { background: #f44336; }
+
+  /* Question Card */
+  .question-card {
+    background: #fff; border-radius: 15px; padding: 30px;
+    margin: 20px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .q-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+  }
+  .q-badge {
+    padding: 5px 15px; border-radius: 15px; font-size: 0.85em; font-weight: bold; color: #fff;
+  }
+  .q-badge.easy { background: #4CAF50; }
+  .q-badge.medium { background: #FF9800; }
+  .q-badge.hard { background: #f44336; }
+  .q-number { color: #aaa; font-size: 1em; }
+  .question-text {
+    font-size: 1.4em; line-height: 1.8; margin: 20px 0; color: #333;
+  }
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .option {
+    padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 10px;
+    cursor: pointer; transition: all 0.3s; font-size: 1.1em;
+  }
+  .option:hover { border-color: #667eea; background: #f8f9ff; }
+  .option.selected { border-color: #667eea; background: #eef0ff; }
+  .option.correct { border-color: #4CAF50; background: #e8f5e9; }
+  .option.wrong { border-color: #f44336; background: #ffebee; }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 20px; padding: 20px; border-radius: 10px; display: none;
+  }
+  .feedback.show { display: block; animation: slideIn 0.4s ease; }
+  .feedback.correct { background: #e8f5e9; border-left: 5px solid #4CAF50; }
+  .feedback.wrong { background: #ffebee; border-left: 5px solid #f44336; }
+  .feedback h3 { margin-bottom: 10px; font-size: 1.3em; }
+  .feedback.correct h3 { color: #2e7d32; }
+  .feedback.wrong h3 { color: #c62828; }
+  .feedback .explanation {
+    margin-top: 10px; padding: 15px; background: #fff; border-radius: 8px;
+    line-height: 1.8; font-size: 1.05em; color: #555; white-space: pre-line;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Buttons */
+  .action-btns { display: flex; gap: 10px; margin-top: 20px; }
+  .btn {
+    padding: 12px 30px; border: none; border-radius: 25px;
+    font-size: 1em; cursor: pointer; transition: all 0.3s; font-weight: 600;
+  }
+  .btn-check { background: #667eea; color: #fff; }
+  .btn-next { background: #4CAF50; color: #fff; }
+  .btn-reset { background: #607D8B; color: #fff; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 8px; background: #e0e0e0; border-radius: 4px; margin: 10px 0; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    transition: width 0.5s; width: 0%;
+  }
+
+  /* Result summary */
+  .result-summary {
+    background: #fff; border-radius: 15px; padding: 30px; margin: 20px 0;
+    text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: none;
+  }
+  .result-summary.show { display: block; }
+  .result-summary h2 { color: #333; margin-bottom: 15px; }
+  .result-score { font-size: 3em; font-weight: bold; color: #667eea; }
+  .result-msg { font-size: 1.3em; margin: 15px 0; }
+  .result-detail {
+    display: flex; justify-content: center; gap: 30px; margin: 20px 0; flex-wrap: wrap;
+  }
+  .result-detail div { text-align: center; }
+  .result-detail .num { font-size: 2em; font-weight: bold; }
+  .result-detail .label { color: #888; }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>國小升私中 數學練習網</h1>
+    <p>七大必考題型 × 分級練習 × 即時回饋</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card score"><h3>已得積分</h3><div class="num" id="statScore">0</div></div>
+    <div class="stat-card correct"><h3>答對題數</h3><div class="num" id="statCorrect">0</div></div>
+    <div class="stat-card wrong"><h3>答錯題數</h3><div class="num" id="statWrong">0</div></div>
+    <div class="stat-card progress"><h3>完成進度</h3><div class="num" id="statProgress">0/0</div></div>
+  </div>
+
+  <!-- Topic Selector -->
+  <div class="topic-selector" id="topicSelector">
+    <button class="topic-btn active" data-topic="0">數與運算</button>
+    <button class="topic-btn" data-topic="1">因數與倍數</button>
+    <button class="topic-btn" data-topic="2">比率與百分率</button>
+    <button class="topic-btn" data-topic="3">代數</button>
+    <button class="topic-btn" data-topic="4">幾何</button>
+    <button class="topic-btn" data-topic="5">速率</button>
+    <button class="topic-btn" data-topic="6">機統與規律</button>
+  </div>
+
+  <!-- Difficulty Selector -->
+  <div class="difficulty-selector" id="diffSelector">
+    <button class="diff-btn active" data-diff="easy">簡易</button>
+    <button class="diff-btn" data-diff="medium">中等</button>
+    <button class="diff-btn" data-diff="hard">難</button>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- Question Card -->
+  <div class="question-card" id="questionCard">
+    <div class="q-header">
+      <span class="q-badge" id="qBadge">簡易</span>
+      <span class="q-number" id="qNumber"></span>
+    </div>
+    <div class="question-text" id="questionText"></div>
+    <div class="options" id="options"></div>
+    <div class="action-btns">
+      <button class="btn btn-check" id="btnCheck" onclick="checkAnswer()">確認答案</button>
+      <button class="btn btn-next" id="btnNext" onclick="nextQuestion()" style="display:none">下一題</button>
+      <button class="btn btn-reset" onclick="resetAll()">重新開始</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- Result Summary -->
+  <div class="result-summary" id="resultSummary">
+    <h2>練習完成！</h2>
+    <div class="result-score" id="resultScore">0</div>
+    <div class="result-msg" id="resultMsg"></div>
+    <div class="result-detail">
+      <div><div class="num" style="color:#4CAF50" id="resultCorrect">0</div><div class="label">答對</div></div>
+      <div><div class="num" style="color:#f44336" id="resultWrong">0</div><div class="label">答錯</div></div>
+      <div><div class="num" style="color:#667eea" id="resultTotal">0</div><div class="label">總題數</div></div>
+    </div>
+    <button class="btn btn-reset" onclick="resetAll()">再練一次</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 題目資料：7大題型 × 3難度 × 每難度3題 = 共63題
+// ============================================================
+const QUESTIONS = [
+  // ---- 0. 數與運算 ----
+  {
+    topic: "數與運算",
+    items: {
+      easy: [
+        { q: "計算：3/5 + 0.25 = ？", options: ["0.75", "0.8", "0.85", "0.9"], answer: 2,
+          explanation: "3/5 = 0.6，0.6 + 0.25 = 0.85（也可化為分數 17/20）" },
+        { q: "計算：0.8 × 0.5 = ？", options: ["0.3", "0.4", "0.45", "0.5"], answer: 1,
+          explanation: "0.8 × 0.5 = 0.4" },
+        { q: "計算：2/3 + 1/6 = ？", options: ["1/2", "5/6", "3/6", "1/3"], answer: 1,
+          explanation: "2/3 = 4/6，4/6 + 1/6 = 5/6" },
+      ],
+      medium: [
+        { q: "計算：(2/3 + 0.75) × 1.2 ÷ 0.5 = ？", options: ["3.2", "3.4", "3.6", "4.0"], answer: 1,
+          explanation: "2/3 + 0.75 = 17/12\n17/12 × 1.2 = 1.7\n1.7 ÷ 0.5 = 3.4" },
+        { q: "估算 4.97 × 3.02 最接近哪個數？", options: ["12", "15", "18", "20"], answer: 1,
+          explanation: "4.97 ≈ 5，3.02 ≈ 3\n5 × 3 = 15" },
+        { q: "計算：(3/4 - 1/6) × 2/3 = ？", options: ["1/3", "7/18", "1/2", "5/12"], answer: 1,
+          explanation: "3/4 - 1/6 = 9/12 - 2/12 = 7/12\n7/12 × 2/3 = 14/36 = 7/18" },
+      ],
+      hard: [
+        { q: "計算：1 + 2 + 3 + … + 100 = ？", options: ["5000", "5050", "5100", "5500"], answer: 1,
+          explanation: "梯形公式：(1+100) × 100 ÷ 2 = 101 × 50 = 5050" },
+        { q: "1/2 + 1/6 + 1/12 + 1/20 + 1/30 + 1/42 = ？", options: ["1/7", "5/7", "6/7", "1"], answer: 2,
+          explanation: "每項拆分：1/(n(n+1)) = 1/n - 1/(n+1)\n原式 = (1-1/2)+(1/2-1/3)+...+(1/6-1/7) = 1 - 1/7 = 6/7" },
+        { q: "16.41587 × 4.768 + 17.58413 × 4.768 - 34 × 2.768 = ？", options: ["58.9487", "60", "65.32", "68"], answer: 3,
+          explanation: "原式 = (16.41587+17.58413)×4.768 - 34×2.768\n= 34×4.768 - 34×2.768\n= 34×(4.768-2.768) = 34×2 = 68" },
+      ],
+    }
+  },
+  // ---- 1. 因數與倍數 ----
+  {
+    topic: "因數與倍數",
+    items: {
+      easy: [
+        { q: "寫出 24 的所有因數，下列何者錯誤？", options: ["6 是因數", "7 是因數", "8 是因數", "12 是因數"], answer: 1,
+          explanation: "24 ÷ 7 = 3...3，不能整除，所以 7 不是 24 的因數。\n24 的因數：1, 2, 3, 4, 6, 8, 12, 24" },
+        { q: "下列哪個數是質數？", options: ["1", "9", "15", "17"], answer: 3,
+          explanation: "17 只能被 1 和 17 整除，是質數。\n1 不是質數，9 = 3×3，15 = 3×5" },
+        { q: "12 的倍數中，最小的倍數是？", options: ["1", "2", "6", "12"], answer: 3,
+          explanation: "一個數的最小倍數就是它自己，所以是 12。" },
+      ],
+      medium: [
+        { q: "求 36 和 48 的最大公因數？", options: ["6", "8", "12", "16"], answer: 2,
+          explanation: "36 = 2² × 3²，48 = 2⁴ × 3\nGCD = 2² × 3 = 12" },
+        { q: "求 36 和 48 的最小公倍數？", options: ["72", "108", "144", "172"], answer: 2,
+          explanation: "36 = 2² × 3²，48 = 2⁴ × 3\nLCM = 2⁴ × 3² = 16 × 9 = 144" },
+        { q: "一個9位數是 60□092□14，它是11的倍數（□為相同數字），□是多少？", options: ["0", "3", "6", "8"], answer: 1,
+          explanation: "11的倍數判別：奇數位和 - 偶數位和 = 0 或 11的倍數\n奇數位：6+□+9+□+4 = 19+2□\n偶數位：0+0+2+1 = 3\n(19+2□) - 3 = 16+2□，需為11的倍數\n16+2×3=22 → □=3" },
+      ],
+      hard: [
+        { q: "30×31×32×…×40 的所有質因數總和是多少？", options: ["145", "168", "174", "197"], answer: 0,
+          explanation: "分解質因數後出現的質數：\n2, 3, 5, 7, 11, 13, 17, 19, 31, 37\n總和 = 2+3+5+7+11+13+17+19+31+37 = 145" },
+        { q: "有一數可寫成7個連續偶數相加、8個或9個連續偶數相加，這個數最小是多少？", options: ["488", "504", "548", "612"], answer: 1,
+          explanation: "7個偶數和 = 7(a+6)，8個 = 8(b+7)，9個 = 9(c+8)\n此數為7、8、9的公倍數，最小 = LCM(7,8,9) = 504" },
+        { q: "用數字4和8組成一個12位數，下列何者一定正確？", options: ["是奇數", "是質數", "是4的倍數", "是9的倍數"], answer: 2,
+          explanation: "末兩位只可能是44, 48, 84, 88，都能被4整除，\n所以不管怎麼組合，一定是4的倍數。" },
+      ],
+    }
+  },
+  // ---- 2. 比率與百分率 ----
+  {
+    topic: "比率與百分率",
+    items: {
+      easy: [
+        { q: "50 的 20% 是多少？", options: ["5", "10", "20", "25"], answer: 1,
+          explanation: "50 × 20% = 50 × 0.2 = 10" },
+        { q: "班上有 40 人，其中 15 人戴眼鏡，戴眼鏡的佔全班百分之幾？", options: ["25%", "35%", "37.5%", "40%"], answer: 2,
+          explanation: "15 ÷ 40 × 100% = 37.5%" },
+        { q: "一件商品打 8 折後賣 400 元，原價是多少？", options: ["320元", "480元", "500元", "560元"], answer: 2,
+          explanation: "原價 = 400 ÷ 0.8 = 500 元" },
+      ],
+      medium: [
+        { q: "一件商品原價 500 元，先打 75 折再打 8 折，售價多少？", options: ["280元", "300元", "350元", "375元"], answer: 1,
+          explanation: "500 × 0.75 × 0.8 = 500 × 0.6 = 300 元\n相當於打 6 折" },
+        { q: "甲數和乙數的比為 3：5，甲為 27，乙為多少？", options: ["35", "40", "45", "50"], answer: 2,
+          explanation: "27 ÷ 3 × 5 = 9 × 5 = 45" },
+        { q: "糖水 300 公克含糖 60 公克，濃度是多少？", options: ["15%", "18%", "20%", "25%"], answer: 2,
+          explanation: "60 ÷ 300 × 100% = 20%" },
+      ],
+      hard: [
+        { q: "糖水 200 公克含糖 15%，要加入多少公克的純水才能稀釋成 10%？", options: ["50g", "80g", "100g", "120g"], answer: 2,
+          explanation: "原含糖 = 200 × 15% = 30g\n稀釋後總重 = 30 ÷ 10% = 300g\n需加水 = 300 - 200 = 100g" },
+        { q: "某商品打 9 折售 1350 元，若當月壽星再打 8 折，壽星要付多少？", options: ["972元", "1080元", "1200元", "1350元"], answer: 2,
+          explanation: "原價 = 1350 ÷ 0.9 = 1500 元\n壽星價 = 1500 × 0.8 = 1200 元" },
+        { q: "婷婷有 85 元，由 5 元、10 元、50 元硬幣組成，共有幾種組合？", options: ["11種", "12種", "13種", "14種"], answer: 2,
+          explanation: "設50元x枚、10元y枚、5元z枚\n50x+10y+5z=85\n逐一列出：(1,3,1)(1,2,3)(1,1,5)(1,0,7)(0,8,1)(0,7,3)...(0,0,17)\n共 13 種組合" },
+      ],
+    }
+  },
+  // ---- 3. 代數 ----
+  {
+    topic: "代數",
+    items: {
+      easy: [
+        { q: "解方程：x + 15 = 37，x = ？", options: ["12", "22", "25", "52"], answer: 1,
+          explanation: "x = 37 - 15 = 22" },
+        { q: "解方程：5x = 75，x = ？", options: ["10", "12", "15", "20"], answer: 2,
+          explanation: "x = 75 ÷ 5 = 15" },
+        { q: "如果 9c + 7c = 32，則 c = ？", options: ["1", "2", "3", "4"], answer: 1,
+          explanation: "9c + 7c = 16c = 32 => c = 2" },
+      ],
+      medium: [
+        { q: "解方程：3x - 7 = 2x + 5，x = ？", options: ["7", "10", "12", "14"], answer: 2,
+          explanation: "3x - 2x = 5 + 7\nx = 12\n驗算：3×12-7=29, 2×12+5=29 ✓" },
+        { q: "如果 x² = 64，則 x = ？（x > 0）", options: ["6", "7", "8", "9"], answer: 2,
+          explanation: "8 × 8 = 64，所以 x = 8" },
+        { q: "某數乘以 12 後再加 8，結果是 140，某數是多少？", options: ["8", "10", "11", "12"], answer: 2,
+          explanation: "設某數為 x：12x + 8 = 140\n12x = 132 => x = 11" },
+      ],
+      hard: [
+        { q: "哥哥比妹妹大 5 歲，兩人年齡和是 31 歲，哥哥幾歲？", options: ["13歲", "15歲", "18歲", "21歲"], answer: 2,
+          explanation: "設妹妹 x 歲，哥哥 x+5 歲\nx + (x+5) = 31\n2x = 26 => x = 13\n哥哥 = 13+5 = 18 歲" },
+        { q: "嘉信有飛機模型5盒，飛機模型是火車模型的1/2少2盒，火車模型多少盒？", options: ["10盒", "12盒", "14盒", "16盒"], answer: 2,
+          explanation: "設火車模型 x 盒\n5 = x/2 - 2\n7 = x/2 => x = 14 盒" },
+        { q: "運算符號「※」規則為 A※B = (A+B)×B，則 (6※8)※2 = ？", options: ["112", "196", "228", "304"], answer: 2,
+          explanation: "6※8 = (6+8)×8 = 14×8 = 112\n112※2 = (112+2)×2 = 114×2 = 228" },
+      ],
+    }
+  },
+  // ---- 4. 幾何 ----
+  {
+    topic: "幾何",
+    items: {
+      easy: [
+        { q: "正方形邊長 6 公分，面積是多少？", options: ["24cm²", "30cm²", "36cm²", "42cm²"], answer: 2,
+          explanation: "面積 = 6 × 6 = 36 平方公分" },
+        { q: "長方形長 10 公分、寬 4 公分，周長是多少？", options: ["14cm", "24cm", "28cm", "40cm"], answer: 2,
+          explanation: "周長 = (10+4) × 2 = 28 公分" },
+        { q: "三角形三個角分別為 50°、60°，第三角是多少度？", options: ["50°", "60°", "70°", "80°"], answer: 2,
+          explanation: "三角形內角和 = 180°\n180° - 50° - 60° = 70°" },
+      ],
+      medium: [
+        { q: "長方形長 15 公分、寬 8 公分，對角線長多少？", options: ["15cm", "17cm", "20cm", "23cm"], answer: 1,
+          explanation: "勾股定理：√(15² + 8²) = √289 = 17 cm\n（熟記勾股數 8-15-17）" },
+        { q: "圓形半徑 5 公分，面積是多少？(π 取 3.14)", options: ["31.4cm²", "62.8cm²", "78.5cm²", "157cm²"], answer: 2,
+          explanation: "面積 = πr² = 3.14 × 5² = 3.14 × 25 = 78.5 cm²" },
+        { q: "正方體體積 27 立方公分，邊長是多少？", options: ["3cm", "6cm", "9cm", "12cm"], answer: 0,
+          explanation: "3³ = 27，邊長 = 3 公分" },
+      ],
+      hard: [
+        { q: "長方體長減 3cm 後變正方體，體積減少 192cm³，原體積是多少？", options: ["512cm³", "704cm³", "816cm³", "920cm³"], answer: 1,
+          explanation: "設正方體邊長 a，3a² = 192 => a² = 64 => a = 8\n原長 = 8+3 = 11\n原體積 = 11 × 8 × 8 = 704 cm³" },
+        { q: "面積 16cm² 正方形紙卡排成邊長 16cm 的大正方形，需幾張？", options: ["4張", "8張", "16張", "256張"], answer: 2,
+          explanation: "小正方形邊長 = 4cm，大正方形邊長 = 16cm\n16 ÷ 4 = 4，需要 4×4 = 16 張" },
+        { q: "將三個半徑 2cm 的圓疊在一起（圓周過彼此圓心），鋪色部分周長？(π表示)", options: ["2π cm", "4π cm", "4π/3 cm", "2π/3 cm"], answer: 0,
+          explanation: "三個圓心連成等邊三角形(60°)\n每個弧 = 2πr × (60°/360°) = 2π×2 × 1/6 = 2π/3\n3個弧 = 3 × 2π/3 = 2π cm" },
+      ],
+    }
+  },
+  // ---- 5. 速率 ----
+  {
+    topic: "速率",
+    items: {
+      easy: [
+        { q: "小明跑步 100 公尺花 20 秒，速率是多少 m/s？", options: ["3 m/s", "4 m/s", "5 m/s", "6 m/s"], answer: 2,
+          explanation: "速率 = 距離 ÷ 時間 = 100 ÷ 20 = 5 m/s" },
+        { q: "時速 72 公里等於每秒多少公尺？", options: ["15 m/s", "18 m/s", "20 m/s", "24 m/s"], answer: 2,
+          explanation: "72 km/h = 72000 m / 3600 s = 20 m/s\n（口訣：km/h ÷ 3.6 = m/s）" },
+        { q: "蝸牛以 2 cm/s 的速率爬行 15 秒，爬了多遠？", options: ["20cm", "25cm", "30cm", "35cm"], answer: 2,
+          explanation: "距離 = 速率 × 時間 = 2 × 15 = 30 cm" },
+      ],
+      medium: [
+        { q: "甲車時速60公里、乙車時速80公里，相距280公里相向而行，幾小時後相遇？", options: ["1.5小時", "2小時", "2.5小時", "3小時"], answer: 1,
+          explanation: "相對速率 = 60 + 80 = 140 km/h\n相遇時間 = 280 ÷ 140 = 2 小時" },
+        { q: "哥哥跑步速率 2.5 m/s，妹妹 1.5 m/s，相距144m相向而行，幾秒後相遇？", options: ["30秒", "36秒", "42秒", "48秒"], answer: 1,
+          explanation: "相對速率 = 2.5 + 1.5 = 4 m/s\n144 ÷ 4 = 36 秒" },
+        { q: "一段路程去程速率 60 km/h，回程 40 km/h，平均速率？", options: ["48 km/h", "50 km/h", "52 km/h", "55 km/h"], answer: 0,
+          explanation: "設全程為d\n平均速率 = 2d / (d/60 + d/40) = 2/(1/60+1/40)\n= 2400/50 = 48 km/h" },
+      ],
+      hard: [
+        { q: "長150m甲火車過橋需42.5秒，同速長300m乙火車需45秒，橋長多少公尺？", options: ["2100m", "2400m", "2700m", "3000m"], answer: 1,
+          explanation: "設車速 v m/s，橋長 L\n甲：(150+L) = 42.5v …①\n乙：(300+L) = 45v …②\n②-①：150 = 2.5v => v = 60\nL = 42.5×60 - 150 = 2550-150 = 2400 m" },
+        { q: "小狗追前方22m的小貓，狗跑3步=貓跑4步，狗7步距離=貓13步，狗至少跑幾m追上？", options: ["22m", "28m", "39m", "78m"], answer: 3,
+          explanation: "速率比 = 步距比/步頻比\n狗速:貓速 = (7步距離/13步距離) × (4步頻/3步頻)\n= 7/13 × 4/3 互換 => 速率比為 39:28\n狗要跑 22 × 39/(39-28) = 78m" },
+        { q: "嘉信用1分20秒走了120m，平均速率是多少 m/s？", options: ["1.0 m/s", "1.5 m/s", "2.0 m/s", "3.0 m/s"], answer: 1,
+          explanation: "1分20秒 = 80秒\n速率 = 120 ÷ 80 = 1.5 m/s" },
+      ],
+    }
+  },
+  // ---- 6. 機統與規律 ----
+  {
+    topic: "機統與規律",
+    items: {
+      easy: [
+        { q: "擲一枚公正硬幣，出現正面的機率是多少？", options: ["1/3", "1/2", "2/3", "1/4"], answer: 1,
+          explanation: "硬幣有正面、反面2種等可能結果\n正面機率 = 1/2" },
+        { q: "數列 2, 4, 6, 8, … 第 10 項是多少？", options: ["18", "20", "22", "24"], answer: 1,
+          explanation: "等差數列，公差=2\n第10項 = 2 + (10-1)×2 = 20" },
+        { q: "班上某次測驗成績：85, 90, 75, 90, 80，中位數是多少？", options: ["80", "82", "85", "90"], answer: 2,
+          explanation: "排序：75, 80, 85, 90, 90\n中位數 = 最中間的數 = 85" },
+      ],
+      medium: [
+        { q: "數列 3, 7, 11, 15, … 第 10 項是多少？", options: ["35", "37", "39", "43"], answer: 2,
+          explanation: "等差數列，首項=3，公差=4\n第10項 = 3 + (10-1)×4 = 3 + 36 = 39" },
+        { q: "同時擲兩個骰子，點數相同的機率是多少？", options: ["1/6", "1/4", "1/3", "1/2"], answer: 0,
+          explanation: "點數相同：(1,1)(2,2)(3,3)(4,4)(5,5)(6,6) = 6種\n總共 36 種 => 機率 = 6/36 = 1/6" },
+        { q: "資料：31, 53, 72, 55, 26, 47, 55, 24, 26，中位數？", options: ["26", "47", "53", "55"], answer: 1,
+          explanation: "排序：24, 26, 26, 31, 47, 53, 55, 55, 72\n9個數，中位數 = 第5個 = 47" },
+      ],
+      hard: [
+        { q: "同時擲兩個骰子，點數相差小於3的機率？", options: ["1/2", "2/3", "23/36", "5/6"], answer: 1,
+          explanation: "總共 6×6 = 36 種\n相差0：(1,1)(2,2)..(6,6) = 6種\n相差1：(1,2)(2,1)(2,3)(3,2)..(5,6)(6,5) = 10種\n相差2：(1,3)(3,1)(2,4)(4,2)(3,5)(5,3)(4,6)(6,4) = 8種\n共 6+10+8 = 24種\n機率 = 24/36 = 2/3" },
+        { q: "1+2+1=4, 1+2+3+2+1=9, 觀察規律，2×(1+2+...+99) = ？", options: ["9801", "9900", "10000", "10100"], answer: 1,
+          explanation: "1+2+...+99+98+...+1 = 99² = 9801\n再加上99 => 9801+99 = 9900" },
+        { q: "2的次方個位數4次一循環(2,4,8,6)，3的2016次方個位數是多少？", options: ["1", "3", "7", "9"], answer: 0,
+          explanation: "3的個位數規律：3,9,7,1（4次循環）\n2016 ÷ 4 = 504...0\n餘數0表示整除，個位數 = 1" },
+      ],
+    }
+  },
+];
+
+// ============================================================
+// 狀態管理
+// ============================================================
+let currentTopic = 0;
+let currentDiff = "easy";
+let currentQuestionIdx = 0;
+let selectedOption = null;
+let answered = false;
+
+const stats = {
+  score: 0,
+  correct: 0,
+  wrong: 0,
+  totalAnswered: 0,
+};
+
+const diffOrder = ["easy", "medium", "hard"];
+const diffLabels = { easy: "簡易", medium: "中等", hard: "難" };
+const diffColors = { easy: "easy", medium: "medium", hard: "hard" };
+const diffScores = { easy: 10, medium: 20, hard: 30 };
+
+// 計算總題數
+const TOTAL_QUESTIONS = QUESTIONS.reduce((sum, t) =>
+  sum + t.items.easy.length + t.items.medium.length + t.items.hard.length, 0);
+
+function getCurrentQuestions() {
+  return QUESTIONS[currentTopic].items[currentDiff];
+}
+
+// ============================================================
+// 渲染題目
+// ============================================================
+function renderQuestion() {
+  const questions = getCurrentQuestions();
+  if (currentQuestionIdx >= questions.length) {
+    showResult();
+    return;
+  }
+
+  const q = questions[currentQuestionIdx];
+  answered = false;
+  selectedOption = null;
+
+  document.getElementById("qBadge").className = "q-badge " + diffColors[currentDiff];
+  document.getElementById("qBadge").textContent = diffLabels[currentDiff];
+  document.getElementById("qNumber").textContent =
+    `第 ${currentQuestionIdx + 1} / ${questions.length} 題 ｜ ${QUESTIONS[currentTopic].topic}`;
+
+  document.getElementById("questionText").textContent = q.q;
+
+  const optionsDiv = document.getElementById("options");
+  optionsDiv.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const div = document.createElement("div");
+    div.className = "option";
+    div.textContent = opt;
+    div.onclick = () => selectOption(i, div);
+    optionsDiv.appendChild(div);
+  });
+
+  document.getElementById("feedback").className = "feedback";
+  document.getElementById("btnCheck").style.display = "inline-block";
+  document.getElementById("btnCheck").disabled = true;
+  document.getElementById("btnNext").style.display = "none";
+
+  updateProgress();
+}
+
+function selectOption(idx, div) {
+  if (answered) return;
+  document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+  div.classList.add("selected");
+  selectedOption = idx;
+  document.getElementById("btnCheck").disabled = false;
+}
+
+// ============================================================
+// 確認答案與回饋
+// ============================================================
+function checkAnswer() {
+  if (selectedOption === null || answered) return;
+  answered = true;
+
+  const q = getCurrentQuestions()[currentQuestionIdx];
+  const correctIdx = q.answer;
+  const isCorrect = selectedOption === correctIdx;
+
+  const options = document.querySelectorAll(".option");
+  options.forEach((opt, i) => {
+    opt.style.cursor = "default";
+    if (i === correctIdx) {
+      opt.classList.add("correct");
+    } else if (i === selectedOption && !isCorrect) {
+      opt.classList.add("wrong");
+    }
+  });
+
+  stats.totalAnswered++;
+  if (isCorrect) {
+    stats.correct++;
+    stats.score += diffScores[currentDiff];
+  } else {
+    stats.wrong++;
+  }
+
+  const feedback = document.getElementById("feedback");
+  feedback.className = "feedback show " + (isCorrect ? "correct" : "wrong");
+  feedback.innerHTML = isCorrect
+    ? "<h3> 答對了！</h3>"
+    : "<h3> 答錯了，加油！</h3>";
+  feedback.innerHTML += `<div class="explanation"><b>詳解：</b>\n${q.explanation}</div>`;
+
+  document.getElementById("btnCheck").style.display = "none";
+  document.getElementById("btnNext").style.display = "inline-block";
+  updateStats();
+}
+
+function nextQuestion() {
+  currentQuestionIdx++;
+  renderQuestion();
+}
+
+// ============================================================
+// 統計與進度
+// ============================================================
+function updateStats() {
+  document.getElementById("statScore").textContent = stats.score;
+  document.getElementById("statCorrect").textContent = stats.correct;
+  document.getElementById("statWrong").textContent = stats.wrong;
+  document.getElementById("statProgress").textContent = `${stats.totalAnswered}/${TOTAL_QUESTIONS}`;
+}
+
+function updateProgress() {
+  const pct = TOTAL_QUESTIONS > 0 ? (stats.totalAnswered / TOTAL_QUESTIONS) * 100 : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+}
+
+// ============================================================
+// 結果總結
+// ============================================================
+function showResult() {
+  // 該難度題目做完，顯示鼓勵並跳到下一個難度
+  const diffIdx = diffOrder.indexOf(currentDiff);
+  if (diffIdx < 2) {
+    currentDiff = diffOrder[diffIdx + 1];
+    currentQuestionIdx = 0;
+    document.querySelectorAll(".diff-btn").forEach(b =>
+      b.classList.toggle("active", b.dataset.diff === currentDiff));
+    const fb = document.getElementById("feedback");
+    fb.className = "feedback show correct";
+    fb.innerHTML = `<h3>太棒了！你完成了${diffLabels[diffOrder[diffIdx]]}題目</h3>
+      <div class="explanation">繼續挑戰${diffLabels[currentDiff]}題目吧！加油！</div>`;
+    setTimeout(() => { fb.className = "feedback"; renderQuestion(); }, 1800);
+    return;
+  }
+
+  // 全部做完，顯示總結
+  const accuracy = stats.totalAnswered > 0
+    ? Math.round(stats.correct / stats.totalAnswered * 100) : 0;
+  let msg = "";
+  if (accuracy >= 90) msg = "太厲害了！你是數學小天才！";
+  else if (accuracy >= 70) msg = "表現優秀！再多練習就更完美了！";
+  else if (accuracy >= 50) msg = "還不錯！繼續努力會更好！";
+  else msg = "加油！多練習就能進步！";
+
+  document.getElementById("resultScore").textContent = stats.score + " 分";
+  document.getElementById("resultMsg").textContent = msg + " (正確率 " + accuracy + "%)";
+  document.getElementById("resultCorrect").textContent = stats.correct;
+  document.getElementById("resultWrong").textContent = stats.wrong;
+  document.getElementById("resultTotal").textContent = TOTAL_QUESTIONS;
+  document.getElementById("resultSummary").classList.add("show");
+  document.getElementById("questionCard").style.display = "none";
+}
+
+// ============================================================
+// 控制事件
+// ============================================================
+document.querySelectorAll(".topic-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".topic-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentTopic = parseInt(btn.dataset.topic);
+    currentQuestionIdx = 0;
+    document.getElementById("resultSummary").classList.remove("show");
+    document.getElementById("questionCard").style.display = "block";
+    renderQuestion();
+  });
+});
+
+document.querySelectorAll(".diff-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".diff-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentDiff = btn.dataset.diff;
+    currentQuestionIdx = 0;
+    renderQuestion();
+  });
+});
+
+function resetAll() {
+  stats.score = 0;
+  stats.correct = 0;
+  stats.wrong = 0;
+  stats.totalAnswered = 0;
+  currentQuestionIdx = 0;
+  currentDiff = "easy";
+  currentTopic = 0;
+  document.querySelectorAll(".topic-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector('.topic-btn[data-topic="0"]').classList.add("active");
+  document.querySelectorAll(".diff-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector('.diff-btn[data-diff="easy"]').classList.add("active");
+  document.getElementById("resultSummary").classList.remove("show");
+  document.getElementById("questionCard").style.display = "block";
+  updateStats();
+  renderQuestion();
+}
+
+// 初始渲染
+renderQuestion();
+updateStats();
+</script>
+</body>
+</html>
