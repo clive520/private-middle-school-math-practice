@@ -170,11 +170,13 @@
 <!-- Scripts -->
 <!-- 若尚無 config/firebase-config.js，自動以本機示範模式運作 -->
 <script src="config/firebase-config.js" onerror="console.info('使用本機示範模式')"></script>
-<script src="js/firebase.js"></script>
+<!-- 非 module 腳本：cdconfig / 資料 / 互動元件（全部寫到 window.xxx） -->
 <script src="js/store.js"></script>
 <script src="js/lessons-data.js"></script>
 <script src="js/quiz-data.js"></script>
 <script src="js/interactions.js"></script>
+<!-- module 腳本：firebase.js 為 ES module（import Firebase SDK），app.js 為一般 script 檔 -->
+<script type="module" src="js/firebase.js"></script>
 <script src="js/app.js"></script>
 
 <script>

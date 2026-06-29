@@ -52,9 +52,10 @@
     updateHeader();
   }
 
-  function handleAuthState(user) {
+  async function handleAuthState(user) {
     if (user) {
-      S.setUser(user);
+      await S.setUser(user);
+      showToast(`歡迎回來，${user.displayName || "同學"}！`, "ok");
       showScreen("home");
     } else {
       showScreen("auth");
@@ -67,7 +68,8 @@
     const btnSso = $("#btn-sso-signin");
     btnGoogle.onclick = async () => {
       try {
-        await F.googleSignIn();
+        const user = await F.googleSignIn();
+        if (user) handleAuthState(user);
       } catch (err) {
         showToast("登入失敗：" + (err.message || err), "error");
       }
@@ -511,6 +513,17 @@
     };
   }
 
-  // 啟動
-  document.addEventListener("DOMContentLoaded", boot);
+  // 啟動：等待 window.Firebase 與 DOM 都就緒再啟動
+  function startWhenReady() {
+    if (window.Firebase && window.Store && window.LESSONS && window.QUIZ_DATA && window.Interactions) {
+      boot();
+    } else {
+      setTimeout(startWhenReady, 50);
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startWhenReady);
+  } else {
+    startWhenReady();
+  }
 })();

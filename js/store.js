@@ -65,11 +65,30 @@ function stripFunctions(obj) { return JSON.parse(JSON.stringify(obj)); }
 // ====== 公開 API ======
 function getState() { return state; }
 
-function setUser(user) {
-  state.uid = user.uid;
-  state.name = user.displayName || user.name || "同學";
-  state.photoURL = user.photoURL || null;
-  persist();
+async function setUser(user) {
+  // 若是新使用者（uid 不一樣），先嘗試從雲端載入進度
+  if (user.uid && user.uid !== state.uid) {
+    const cloudData = (window.Firebase && window.Firebase.fbMode() === "cloud")
+      ? await window.Firebase.loadStudentData(user.uid) : null;
+    if (cloudData) {
+      // 用雲端資料覆蓋本地狀態（補齊缺少欄位）
+      state = Object.assign(defaultState(user.uid, user.displayName || "同學"), cloudData, {
+        uid: user.uid, name: user.displayName || user.name || "同學", photoURL: user.photoURL || null,
+      });
+    } else {
+      // 全新帳號，重設狀態
+      state = defaultState(user.uid, user.displayName || "同學");
+      state.photoURL = user.photoURL || null;
+    }
+  } else {
+    state.uid = user.uid;
+    state.name = user.displayName || user.name || "同學";
+    state.photoURL = user.photoURL || null;
+  }
+  // 更新最後登入日期
+  const today = new Date().toISOString().slice(0, 10);
+  state.lastLoginDate = today;
+  await persist();
 }
 
 // 記錄一張卡片被看過

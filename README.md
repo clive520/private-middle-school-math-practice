@@ -24,16 +24,21 @@
 
 ## 啟用 Firebase 雲端儲存
 
+📖 **完整設定指南**：請參考 [`docs/FIREBASE_SETUP.md`](docs/FIREBASE_SETUP.md)（含 Firebase Console 逐步操作、Google 登入啟用、Firestore 規則設定）
+
+快速步驟：
+
 1. 至 [Firebase Console](https://console.firebase.google.com) 建立專案
 2. 新增 Web 應用程式，取得下列設定值：`apiKey`、`authDomain`、`projectId`、`storageBucket`、`messagingSenderId`、`appId`
 3. 在 Authentication → Sign-in method 啟用 **Google** 登入
-4. 建立 **Firestore Database**
-5. 將 `config/firebase-config.example.js` 複製為 `config/firebase-config.js` 並填入真實設定
+4. 在 Authentication → Settings → Authorized domains 加入 `clive520.github.io`
+5. 建立 **Firestore Database**（設定安全性規則）
+6. 將 `config/firebase-config.example.js` 複製為 `config/firebase-config.js` 並填入真實設定
    ```
    cp config/firebase-config.example.js config/firebase-config.js
    # 編輯 firebase-config.js 填入設定
    ```
-6. 重整頁面即可使用 Google 登入與雲端同步
+7. 重整頁面即可使用 Google 登入與雲端同步
 
 ## 啟用自有 SSO 系統
 
@@ -52,15 +57,16 @@ window.SSO_CONFIG = {
 
 ## 專案結構
 
-```
-.
+```.
 ├── index.html                      # SPA 入口
 ├── css/styles.css                  # 主題、佈局、動畫
 ├── config/
 │   ├── firebase-config.example.js  # Firebase 設定範本
 │   └── firebase-config.js          # 真實設定 (gitignore，需自行建立)
+├── docs/
+│   └── FIREBASE_SETUP.md           # Firebase Console 逐步設定指南
 ├── js/
-│   ├── firebase.js                 # Firebase 初始化、雙認證、Firestore CRUD
+│   ├── firebase.js                 # Firebase v10 (ES module): Google 登入、Firestore CRUD
 │   ├── store.js                    # 狀態管理 + localStorage 與雲端同步
 │   ├── lessons-data.js             # 七大單元教學卡片內容
 │   ├── quiz-data.js                # 測驗題庫與詳解
