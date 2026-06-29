@@ -7,8 +7,9 @@
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+  // 注意：Firebase 透過 ES module 載入（defer），這裡只在 boot 時動態讀取
   const S = window.Store;
-  const F = window.Firebase;
+  let F = window.Firebase; // 可能在 boot 執行時才就緒
   const L = window.LESSONS;
   const Q = window.QUIZ_DATA;
   const I = window.Interactions;
@@ -20,6 +21,8 @@
 
   // ===== 啟動 =====
   async function boot() {
+    // 重新讀取 Firebase（因為 ES module defer，boot 執行時才會就緒）
+    F = window.Firebase;
     figwheel();
     await F.initFirebase();
     S.setFbModeFn(F.fbMode);
