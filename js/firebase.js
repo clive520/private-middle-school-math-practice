@@ -85,18 +85,12 @@ async function googleSignIn() {
       isDemo: true,
     };
   }
-  // 雲端模式：優先 popup，行動裝置自動退回 redirect
-  try {
-    const result = await signInWithPopup(_auth, _provider);
-    return wrapUser(result.user);
-  } catch (err) {
-    if (err.code === "auth/popup-blocked" || err.code === "auth/cancelled-popup-request") {
-      console.info("[Firebase] popup 被擋，改用 redirect");
-      await signInWithRedirect(_auth, _provider);
-      return null;
-    }
-    throw err;
-  }
+  // 雲端模式：GitHub Pages 有 COOP header 會擋住 popup 的 window.close()，
+  // 所以一律使用 signInWithRedirect（整頁跳轉再跳回），更穩定。
+  // getRedirectResult() 會在 initFirebase 時接力，onAuthStateChanged 會接管後續。
+  console.info("[Firebase] 使用 redirect 登入模式...");
+  await signInWithRedirect(_auth, _provider);
+  return null; // 頁面會跳轉，這裡的 return 不會被用到
 }
 
 // ===== 登出 =====

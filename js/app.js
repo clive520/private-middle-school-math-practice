@@ -80,8 +80,8 @@
     btnGoogle.onclick = async () => {
       try {
         const user = await F.googleSignIn();
-        // 雲端模式由 onAuthStateChanged 負責切換畫面；
-        // demo 模式不會觸發 onAuthStateChanged，需手動呼叫
+        // redirect 模式下頁面會跳轉，user 為 null，onAuthStateChanged 會接管
+        // demo 模式才需手動觸發
         if (user && user.isDemo) handleAuthState(user);
       } catch (err) {
         showToast("登入失敗：" + (err.message || err), "error");
