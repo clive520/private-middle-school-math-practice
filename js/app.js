@@ -55,12 +55,20 @@
     updateHeader();
   }
 
+  let _authHandled = false;
   async function handleAuthState(user) {
     if (user) {
-      await S.setUser(user);
-      showToast(`歡迎回來，${user.displayName || "同學"}！`, "ok");
-      showScreen("home");
+      if (_authHandled) return; // 防止 onAuthStateChanged 與 onclick 重複觸發
+      _authHandled = true;
+      try {
+        await S.setUser(user);
+        showToast(`歡迎回來，${user.displayName || "同學"}！`, "ok");
+      } catch (err) {
+        console.error("[Auth] setUser 失敗:", err);
+      }
+      showScreen("home"); // 不論 setUser 成功與否都切換到首頁
     } else {
+      _authHandled = false;
       showScreen("auth");
     }
   }
@@ -72,7 +80,9 @@
     btnGoogle.onclick = async () => {
       try {
         const user = await F.googleSignIn();
-        if (user) handleAuthState(user);
+        // 雲端模式由 onAuthStateChanged 負責切換畫面；
+        // demo 模式不會觸發 onAuthStateChanged，需手動呼叫
+        if (user && user.isDemo) handleAuthState(user);
       } catch (err) {
         showToast("登入失敗：" + (err.message || err), "error");
       }
