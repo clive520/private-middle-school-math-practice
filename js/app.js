@@ -35,8 +35,11 @@
   }
 
   function figwheel() {
-    // 歡迎動畫 1.5 秒後顯示登入
-    setTimeout(() => showScreen("auth"), 1500);
+    // 歡迎動畫 1.5 秒後顯示登入；timeout 可被 handleAuthState 取消
+    _splashTimer = setTimeout(() => {
+      _splashTimer = null;
+      if (!_authHandled) showScreen("auth");
+    }, 1500);
   }
 
   // ===== 螢幕切換 =====
@@ -57,10 +60,14 @@
   }
 
   let _authHandled = false;
+  let _splashTimer = null;
+
   async function handleAuthState(user) {
     if (user) {
       if (_authHandled) return; // 防止 onAuthStateChanged 與 onclick 重複觸發
       _authHandled = true;
+      // 取消 splash timeout，避免它延遲把畫面切回 auth
+      if (_splashTimer) { clearTimeout(_splashTimer); _splashTimer = null; }
       try {
         await S.setUser(user);
         showToast(`歡迎回來，${user.displayName || "同學"}！`, "ok");
