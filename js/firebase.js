@@ -51,6 +51,7 @@ async function initFirebase() {
 
     // 註冊全域監聽
     onAuthStateChanged(_auth, (user) => {
+      console.info("[Firebase] onAuthStateChanged 觸發:", user ? user.displayName : "未登入", "| callback:", _onAuthCb ? "已設" : "NULL");
       if (_onAuthCb) _onAuthCb(user ? wrapUser(user) : null);
     });
 
@@ -105,6 +106,12 @@ function onAuthChange(callback) {
   _onAuthCb = callback;
   // demo 模式直接以未登入呼叫一次
   if (_mode === "demo") setTimeout(() => callback(null), 0);
+  // 若雲端模式且已有使用者（例如 redirect 完成回來後才註冊），
+  // 立刻以 currentUser 觸發一次 callback
+  if (_mode === "cloud" && _auth && _auth.currentUser) {
+    console.info("[Firebase] onAuthChange 註冊時已有 currentUser:", _auth.currentUser.displayName);
+    setTimeout(() => callback(wrapUser(_auth.currentUser)), 0);
+  }
 }
 
 // ===== Firestore CRUD =====

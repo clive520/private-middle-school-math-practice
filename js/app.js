@@ -24,12 +24,13 @@
     // 重新讀取 Firebase（因為 ES module defer，boot 執行時才會就緒）
     F = window.Firebase;
     figwheel();
-    await F.initFirebase();
     S.setFbModeFn(F.fbMode);
+    // 先註冊 onAuthChange（callback），再 initFirebase，
+    // 這樣 initFirebase 內部 onAuthStateChanged 觸發時 _onAuthCb 已就緒
+    F.onAuthChange(handleAuthState);
+    await F.initFirebase();
     // 處理 SSO 回呼
     await F.handleSsoCallback();
-    // 監聽 auth
-    F.onAuthChange(handleAuthState);
     bindGlobalEvents();
   }
 
