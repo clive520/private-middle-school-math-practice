@@ -54,8 +54,10 @@ function saveLocal() {
 async function persist() {
   saveLocal();
   // 雲端模式時也同步上去
-  if (state.uid && fbMode() === "cloud") {
-    await saveStudentData(state.uid, stripFunctions(state));
+  if (state.uid && window.Firebase && window.Firebase.fbMode() === "cloud") {
+    try {
+      await window.Firebase.saveStudentData(state.uid, stripFunctions(state));
+    } catch (err) { console.warn("[store] 雲端同步失敗:", err); }
   }
 }
 
